@@ -17,15 +17,12 @@ using bytes = std::vector<u_char>;
 auto rnd_byte = []() -> u_char { return rnd(u_char{0x00}, u_char{0xFF}); };
 
 bytes
-generate_request() {
-  u_char keys_num{3};
+generate_request(size_t keys_num) {
   size_t payload_length = keys_num * KEY_LENGTH;
 
-  bytes request(keys_num * KEY_LENGTH + 1);
+  bytes request(payload_length);
 
-  request[0] = keys_num;
-
-  std::ranges::generate_n(request.begin() + 1, payload_length, rnd_byte);
+  std::ranges::generate_n(request.begin(), payload_length, rnd_byte);
   return request;
 }
 
@@ -53,7 +50,7 @@ run(std::string_view host, u_short port) {
     t.expires_after(2s);
     co_await t.async_wait(asio::use_awaitable);
 
-    auto payload = generate_request();
+    auto payload = generate_request(4);
     co_await request(host, port, std::move(payload));
   }
 }

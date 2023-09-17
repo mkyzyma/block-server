@@ -11,7 +11,6 @@ project(
 
 deps = [dependency('boost')]
 
-tcp = library('base', 'tcp/tcp_server.cpp', dependencies: deps)
 
 executable(
     'block-server',
@@ -19,9 +18,7 @@ executable(
     install: true,
     dependencies: deps,
     link_args: ['-static'],
-    link_with: [
-        tcp,
-    ],
+
 )
 
 executable(
