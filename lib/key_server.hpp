@@ -1,5 +1,5 @@
-#ifndef BLOCK_BLOCK_SERVER_HPP_
-#define BLOCK_BLOCK_SERVER_HPP_
+#ifndef LIB_KEY_SERVER_HPP_
+#define LIB_KEY_SERVER_HPP_
 
 #include <boost/asio/awaitable.hpp>
 #include <boost/asio/buffer.hpp>
@@ -12,7 +12,7 @@
 #include <vector>
 
 using bytes = std::vector<u_char>;
-template <class BaseServer, size_t KeyLength = 128> class block_server {
+template <class BaseServer, size_t KeyLength = 128> class key_server {
 private:
   using tcp = boost::asio::ip::tcp;
 
@@ -33,7 +33,7 @@ private:
                                               Handler &&handler) {
     // u_char chunk[KeyLength];
 
-    // std::cout << "Hello, I`m block_server" << std::endl;
+    // std::cout << "Hello, I`m key_server" << std::endl;
     boost::asio::streambuf b;
 
     try {
@@ -69,4 +69,4 @@ private:
   BaseServer base_;
 };
 
-#endif // BLOCK_BLOCK_SERVER_HPP_
+#endif // LIB_KEY_SERVER_HPP_
