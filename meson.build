@@ -14,7 +14,7 @@ deps = [dependency('boost')]
 
 executable(
     'block-server',
-    'block_server_run.cpp',
+    'block_server.cpp',
     install: true,
     dependencies: deps,
     link_args: ['-static'],

@@ -6,9 +6,8 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/streambuf.hpp>
 #include <boost/asio/use_awaitable.hpp>
-#include <iomanip>
-#include <iostream>
 #include <utility>
+
 #include <vector>
 
 using bytes = std::vector<u_char>;
@@ -31,9 +30,6 @@ private:
   template <typename Handler>
   boost::asio::awaitable<void> handle_request(tcp::socket socket,
                                               Handler &&handler) {
-    // u_char chunk[KeyLength];
-
-    // std::cout << "Hello, I`m key_server" << std::endl;
     boost::asio::streambuf b;
 
     try {
@@ -45,7 +41,6 @@ private:
         while (length < KeyLength) {
           length +=
               co_await socket.async_read_some(bufs, boost::asio::use_awaitable);
-          // std::cout << b.size() << "/" << KeyLength << std::endl;
         }
 
         auto key_ptr = boost::asio::buffer_cast<u_char *>(bufs);
@@ -61,8 +56,6 @@ private:
         throw;
       }
     }
-
-    co_return;
   }
 
 private:
