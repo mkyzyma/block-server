@@ -1,5 +1,5 @@
-#ifndef TCP_TCP_SERVER_HPP_
-#define TCP_TCP_SERVER_HPP_
+#ifndef LIB_TCP_SERVER_HPP_
+#define LIB_TCP_SERVER_HPP_
 
 #include <boost/asio/awaitable.hpp>
 #include <boost/asio/co_spawn.hpp>
@@ -46,4 +46,4 @@ private:
   }
 };
 
-#endif // TCP_TCP_SERVER_HPP_
+#endif // LIB_TCP_SERVER_HPP_

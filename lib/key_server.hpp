@@ -8,9 +8,8 @@
 #include <boost/asio/use_awaitable.hpp>
 #include <utility>
 
-#include <vector>
+#include <string_view>
 
-using bytes = std::vector<u_char>;
 template <class BaseServer, size_t KeyLength = 128> class key_server {
 private:
   using tcp = boost::asio::ip::tcp;
@@ -43,11 +42,11 @@ private:
               co_await socket.async_read_some(bufs, boost::asio::use_awaitable);
         }
 
-        auto key_ptr = boost::asio::buffer_cast<u_char *>(bufs);
+        auto key_ptr = boost::asio::buffer_cast<char *>(bufs);
 
-        bytes key{key_ptr, key_ptr + KeyLength};
+        std::string_view key{key_ptr, key_ptr + KeyLength};
 
-        co_await handler(socket, std::move(key));
+        co_await handler(socket, key);
 
         b.consume(KeyLength);
       }

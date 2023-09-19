@@ -3,6 +3,8 @@
 #include <ranges>
 #include <vector>
 
+#define __DEBUG__
+#include "utils/debug.hpp"
 #include "utils/random.hpp"
 
 namespace asio = boost::asio;
@@ -10,11 +12,12 @@ using tcp = asio::ip::tcp;
 
 using namespace std::chrono_literals; // NOLINT
 
-static const std::size_t KEY_LENGTH = 8;
+static const size_t KEY_LENGTH = 8;
+static const size_t SIZE_LENGTH = 6;
 
 using bytes = std::vector<u_char>;
 
-auto rnd_byte = []() -> u_char { return rnd(u_char{0x00}, u_char{0xFF}); };
+auto random_char = []() -> char { return random(char{0x00}, char{0x7F}); };
 
 bytes
 generate_request(size_t keys_num) {
@@ -22,21 +25,57 @@ generate_request(size_t keys_num) {
 
   bytes request(payload_length);
 
-  std::ranges::generate_n(request.begin(), payload_length, rnd_byte);
+  std::ranges::generate_n(request.begin(), payload_length, random_char);
   return request;
 }
 
+asio::awaitable<bytes>
+consume(tcp::socket &socket, asio::streambuf &buffer, size_t desired_length) {
+  asio::streambuf::mutable_buffers_type bufs = buffer.prepare(desired_length);
+
+  size_t length = 0;
+
+  while (length < desired_length) {
+    length += co_await asio::async_read(socket, bufs, asio::use_awaitable);
+  }
+
+  auto ptr = asio::buffer_cast<const char *>(buffer.data());
+  buffer.consume(desired_length);
+
+  co_return bytes{ptr, ptr + desired_length};
+  // std::string_view key{key_ptr, key_ptr + KEY_LENGTH};
+}
+
 asio::awaitable<void>
-request(std::string_view host, u_short port, bytes &&request) {
+request(std::string_view host, u_short port, size_t keys_num) {
   try {
+    auto payload = generate_request(keys_num);
     tcp::socket socket{co_await asio::this_coro::executor};
 
     co_await socket.async_connect(
-        tcp::endpoint{asio::ip::make_address(host), port},
-        boost::asio::use_awaitable);
+        tcp::endpoint{asio::ip::make_address(host), port}, asio::use_awaitable);
 
-    co_await asio::async_write(socket, asio::buffer(request),
+    co_await asio::async_write(socket, asio::buffer(payload),
                                asio::use_awaitable);
+
+    asio::streambuf buffer;
+
+    for (size_t block_index = 0; block_index < keys_num; ++block_index) {
+      bytes size_bytes = co_await consume(socket, buffer, 4);
+      size_t length = *reinterpret_cast<int32_t *>(size_bytes.data());
+
+      std::cout << "Length bytes: ";
+      print_bytes(size_bytes.begin(), size_bytes.end());
+      std::cout << "Length: " << length << std::endl;
+
+      bytes payload = co_await consume(socket, buffer, length);
+
+      bytes key{payload.begin(), payload.begin() + KEY_LENGTH};
+      std::cout << "Key: ";
+
+      print_bytes(key.begin(), key.end());
+      std::cout << std::endl;
+    }
   } catch (std::exception &ex) {
     std::cerr << ex.what() << std::endl;
   }
@@ -50,8 +89,7 @@ run(std::string_view host, u_short port) {
     t.expires_after(2s);
     co_await t.async_wait(asio::use_awaitable);
 
-    auto payload = generate_request(4);
-    co_await request(host, port, std::move(payload));
+    co_await request(host, port, 1000);
   }
 }
 

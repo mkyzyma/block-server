@@ -1,5 +1,6 @@
+// #define __DEBUG__
 #include "lib/block_server.hpp"
-#include "lib/blocks.hpp"
+#include "lib/deep_thought.hpp"
 #include "lib/key_server.hpp"
 #include "lib/tcp_server.hpp"
 #include <boost/asio.hpp>
@@ -11,7 +12,7 @@ int
 main() {
   asio::io_context ioc;
 
-  block_server<key_server<tcp_server, 8>, blocks<int>> server;
+  block_server<key_server<tcp_server, 8>, deep_thought<0x100000>> server;
   server.start(ioc, "0.0.0.0", 1234);
 
   ioc.run();
