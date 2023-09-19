@@ -25,23 +25,22 @@ public:
 
 private:
   boost::asio::awaitable<void> handle_request(auto &socket, auto key) {
-    try {
-      auto block = blocks_[key];
-      auto length = block.size() + key.size();
 
-      print_bytes(block.begin(), block.end());
+    auto block = blocks_[key];
+    auto length = block.size() + key.size();
 
-      buffers response = {boost::asio::buffer(&length, sizeof(int32_t)),
-                          boost::asio::buffer(key), boost::asio::buffer(block)};
+    print_bytes(block.begin(), block.end());
 
-      co_await boost::asio::async_write(socket, response,
-                                        boost::asio::use_awaitable);
-    } catch()
+    buffers response = {boost::asio::buffer(&length, sizeof(int32_t)),
+                        boost::asio::buffer(key), boost::asio::buffer(block)};
+
+    co_await boost::asio::async_write(socket, response,
+                                      boost::asio::use_awaitable);
   }
 
-  private:
-    KeyServer key_server_;
-    Blocks blocks_;
+private:
+  KeyServer key_server_;
+  Blocks blocks_;
 };
 
 #endif // LIB_BLOCK_SERVER_HPP_

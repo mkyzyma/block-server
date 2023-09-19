@@ -35,10 +35,17 @@ private:
       std::cout << "Server listening on port " << endpoint.port() << std::endl;
 
       while (true) {
-        auto client_socket =
-            co_await acceptor.async_accept(boost::asio::use_awaitable);
+        try {
+          auto client_socket =
+              co_await acceptor.async_accept(boost::asio::use_awaitable);
 
-        co_await handler(std::move(client_socket));
+          co_await handler(std::move(client_socket));
+        } catch (boost::system::system_error se) {
+          if (se.code() != boost::asio::error::connection_reset &&
+              se.code() != boost::asio::error::broken_pipe) {
+            throw;
+          }
+        }
       }
     } catch (std::exception &e) {
       std::cerr << e.what() << std::endl;

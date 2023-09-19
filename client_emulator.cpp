@@ -12,7 +12,7 @@ using tcp = asio::ip::tcp;
 
 using namespace std::chrono_literals; // NOLINT
 
-static const size_t KEY_LENGTH = 8;
+static const size_t KEY_LENGTH = 128;
 static const size_t MAX_KEYS_NUM = 10000;
 static const size_t SIZE_LENGTH = 6;
 
@@ -86,8 +86,8 @@ run(std::string_view host, u_short port) {
   auto exec = co_await asio::this_coro::executor;
   auto t = asio::steady_timer{exec};
   while (true) {
-    t.expires_after(2s);
-    co_await t.async_wait(asio::use_awaitable);
+    // t.expires_after(2s);
+    // co_await t.async_wait(asio::use_awaitable);
 
     size_t keys_num = random<size_t>(0, MAX_KEYS_NUM);
 
