@@ -13,11 +13,12 @@ using tcp = asio::ip::tcp;
 using namespace std::chrono_literals; // NOLINT
 
 static const size_t KEY_LENGTH = 8;
+static const size_t MAX_KEYS_NUM = 10000;
 static const size_t SIZE_LENGTH = 6;
 
 using bytes = std::vector<u_char>;
 
-auto random_char = []() -> char { return random(char{0x00}, char{0x7F}); };
+auto random_char = []() -> char { return random(0x00, 0x7F); };
 
 bytes
 generate_request(size_t keys_num) {
@@ -43,7 +44,6 @@ consume(tcp::socket &socket, asio::streambuf &buffer, size_t desired_length) {
   buffer.consume(desired_length);
 
   co_return bytes{ptr, ptr + desired_length};
-  // std::string_view key{key_ptr, key_ptr + KEY_LENGTH};
 }
 
 asio::awaitable<void>
@@ -61,7 +61,7 @@ request(std::string_view host, u_short port, size_t keys_num) {
     asio::streambuf buffer;
 
     for (size_t block_index = 0; block_index < keys_num; ++block_index) {
-      bytes size_bytes = co_await consume(socket, buffer, 4);
+      bytes size_bytes = co_await consume(socket, buffer, sizeof(int32_t));
       size_t length = *reinterpret_cast<int32_t *>(size_bytes.data());
 
       std::cout << "Length bytes: ";
@@ -89,7 +89,9 @@ run(std::string_view host, u_short port) {
     t.expires_after(2s);
     co_await t.async_wait(asio::use_awaitable);
 
-    co_await request(host, port, 1000);
+    size_t keys_num = random<size_t>(0, MAX_KEYS_NUM);
+
+    co_await request(host, port, keys_num);
   }
 }
 

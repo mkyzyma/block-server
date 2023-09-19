@@ -13,8 +13,6 @@ public:
   }
   size_t get_block_size(const std::string &hash) {
     return random<size_t>(0x01, MaxBlockSize);
-
-    // return MaxBlockSize;
   }
   size_t get_block_data(size_t block_num, char *buffer, size_t buffer_size) {
     std::fill_n(buffer, buffer_size, Fill);

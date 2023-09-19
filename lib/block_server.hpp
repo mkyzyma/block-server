@@ -19,30 +19,29 @@ public:
     key_server_.start(
         ioc, host, port,
         [this](auto &socket, auto key) -> boost::asio::awaitable<void> {
-          auto block = blocks_[key];
-          auto length = block.size() + key.size();
-          // for (auto b : block) {
-          //   std::cout << std::hex << std::setfill('0') << std::setw(2)
-          //             << static_cast<u_short>(b) << " ";
-          // }
-          // std::cout << "|" << std::endl;
-
-          print_bytes(block.begin(), block.end());
-
-          buffers response = {boost::asio::buffer(&length, 4),
-                              boost::asio::buffer(key),
-                              boost::asio::buffer(block)};
-
-          co_await boost::asio::async_write(socket, response,
-                                            boost::asio::use_awaitable);
-
-          co_return;
+          return handle_request(socket, key);
         });
   }
 
 private:
-  KeyServer key_server_;
-  Blocks blocks_;
+  boost::asio::awaitable<void> handle_request(auto &socket, auto key) {
+    try {
+      auto block = blocks_[key];
+      auto length = block.size() + key.size();
+
+      print_bytes(block.begin(), block.end());
+
+      buffers response = {boost::asio::buffer(&length, sizeof(int32_t)),
+                          boost::asio::buffer(key), boost::asio::buffer(block)};
+
+      co_await boost::asio::async_write(socket, response,
+                                        boost::asio::use_awaitable);
+    } catch()
+  }
+
+  private:
+    KeyServer key_server_;
+    Blocks blocks_;
 };
 
 #endif // LIB_BLOCK_SERVER_HPP_
